@@ -1,0 +1,64 @@
+#! /bin/sh
+
+PREREQ=""
+DESCRIPTION="Setting up locales..."
+
+prereqs()
+{
+       echo "$PREREQ"
+}
+
+case $1 in
+# get pre-requisites
+prereqs)
+       prereqs
+       exit 0
+       ;;
+esac
+
+. /scripts/casper-functions
+
+log_begin_msg "$DESCRIPTION"
+
+if [ -e /root/etc/default/locale ]; then
+    grep_file=/root/etc/default/locale
+elif [ -e /root/etc/environment ]; then # Old locales policy
+    grep_file=/root/etc/environment
+fi
+
+if [ -n "${grep_file}" ]; then
+    # use rootfs configured locale
+    locale=$(grep -s 'LANG=' ${grep_file} | sed s/'LANG='// | tr -d '"' )
+fi
+
+# commandline
+for x in $(cat /proc/cmdline); do
+    case $x in
+	locale=*)
+	    locale=${x#locale=}
+	    set_locale="true"
+	    break ;;
+    esac
+done
+
+if [ -z "${locale}" ]; then
+    # Set a default one
+    locale=en_US.UTF-8
+    set_locale="true"
+fi
+
+if [ "${set_locale}" ]; then
+    LANG=$(grep "^${locale}" /root/usr/share/i18n/SUPPORTED | grep UTF-8 |sed -e 's, .*,,' -e q)
+    printf 'LANG="%s"\n' "${LANG}" >> /root/etc/default/locale
+    printf 'LANG="%s"\n' "${LANG}" >> /root/etc/environment
+    printf '%s UTF-8\n' "${LANG}" > /root/etc/locale.gen
+    chroot /root /usr/sbin/locale-gen "${LANG}"
+fi
+
+#creat well known users dirs, depends on locale
+if [ -x /root/usr/bin/xdg-user-dirs-update ];then
+	. /etc/casper.conf
+	chroot /root su "$USERNAME" -c "/usr/bin/xdg-user-dirs-update"
+fi
+
+log_end_msg
