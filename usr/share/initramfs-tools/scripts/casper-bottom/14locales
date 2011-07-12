@@ -43,16 +43,36 @@ done
 
 if [ -z "${locale}" ]; then
     # Set a default one
-    locale=en_US.UTF-8
+    locale=zh_CN.UTF-8
     set_locale="true"
 fi
 
 if [ "${set_locale}" ]; then
     LANG=$(grep "^${locale}" /root/usr/share/i18n/SUPPORTED | grep UTF-8 |sed -e 's, .*,,' -e q)
-    printf 'LANG="%s"\n' "${LANG}" >> /root/etc/default/locale
+    printf 'LANG="%s"\n' "${LANG}" > /root/etc/default/locale
     printf 'LANG="%s"\n' "${LANG}" >> /root/etc/environment
     printf '%s UTF-8\n' "${LANG}" > /root/etc/locale.gen
     chroot /root /usr/sbin/locale-gen "${LANG}"
+    #
+    case ${LANG%%.*} in
+            zh_TW|zh_tw)
+		    timez="Asia/Taipei"
+		    LANGUAGE='"zh_TW:zh"' ;;
+	    zh_HK|zh_hk)
+		    timez="Asia/Hong_Kong"
+		     LANGUAGE='"zh_HK:zh"' ;;
+	     en_US|en_us)
+	              timez="UTC"
+	              LANGUAGE='"en_US:en"'  ;;
+	    zh_CN|zh_cn|*)
+	               timez="Asia/Shanghai"
+	               LANGUAGE='"zh_CN:zh"' 
+     esac
+     printf 'LANGUAGE="%s"\n' "${LANGUAGE}" >> /root/etc/default/locale
+     if [ -f /root/usr/share/zoneinfo/${timez} ]; then
+	     cat /root/usr/share/zoneinfo/${timez}  >/root/etc/localtime
+ 	     echo ${timez}                          >/root/etc/timezone	
+     fi
 fi
 
 #creat well known users dirs, depends on locale
