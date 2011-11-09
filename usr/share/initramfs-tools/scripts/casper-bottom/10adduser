@@ -22,7 +22,7 @@ log_begin_msg "$DESCRIPTION"
 
 #
 chroot /root /usr/sbin/useradd -m -s /bin/bash "$USERNAME"
-chroot /root /usr/sbin/usermod -aG tape,floppy,audio,video,usb,cdrom,netdev,dialout,wheel "$USERNAME"
+chroot /root /usr/sbin/usermod -aG tape,floppy,audio,video,usb,cdrom,netdev,dialout,wheel,sambashare "$USERNAME"
 #empty user's passwd
 chroot /root /bin/chmod +w /etc/shadow
 chroot /root /bin/sed -i '/^'"$USERNAME"':/s/!//g' /etc/shadow
