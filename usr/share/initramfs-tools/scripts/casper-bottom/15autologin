@@ -20,6 +20,14 @@ esac
 
 log_begin_msg "$DESCRIPTION"
 
+# lightdm
+if [ -f /etc/lightdm/lightdm.conf ];then 
+	CustomFile=/etc/lightdm/lightdm.conf
+	sed -i 's/#autologin-user=/autologin-user='"$USERNAME"'/g' $CustomFile
+	sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/g' $CustomFile
+fi
+
+# gdm
 if [ -d /root/etc/gdm ]; then
     # Configure GDM autologin
     GDMCustomFile=/root/etc/gdm/custom.conf
@@ -44,6 +52,7 @@ TimedLoginDelay=10"
 	sed -i 's/TimedLoginDelay=30/TimedLoginDelay=10/g'                 $GDMCustomFile
 fi
 
+# kdm
 if [ -f /root/etc/kde4/kdm/kdmrc ]; then
     # Configure KDM autologin
     sed -i -r \
@@ -53,6 +62,7 @@ if [ -f /root/etc/kde4/kdm/kdmrc ]; then
         /root/etc/kde4/kdm/kdmrc
 fi
 
+# lxdm
 if [ -f /root/etc/lxdm/lxdm.conf ]; then
     # Configure LXDM autologin with LXDE session
    sed -i -r \
