@@ -21,8 +21,8 @@ esac
 log_begin_msg "$DESCRIPTION"
 
 # lightdm
-if [ -f /etc/lightdm/lightdm.conf ];then 
-	CustomFile=/etc/lightdm/lightdm.conf
+if [ -f /root/etc/lightdm/lightdm.conf ];then 
+	CustomFile=/root/etc/lightdm/lightdm.conf
 	sed -i 's/#autologin-user=/autologin-user='"$USERNAME"'/g' $CustomFile
 	sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/g' $CustomFile
 fi
