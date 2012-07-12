@@ -35,10 +35,9 @@ if [ -e /etc/casper.conf ]; then
 else
 	USERNAME=$(cat /etc/passwd | grep "999" | cut -f1 -d ':')
 	HOSTNAME=$(hostname)
-	BUILD_SYSTEM="Debian"
 fi
 
-export USERNAME USERFULLNAME HOSTNAME BUILD_SYSTEM
+export USERNAME USERFULLNAME HOSTNAME TMPFSSIZE
 
 # Source helper functions
 helpers="/usr/share/initramfs-tools/scripts/casper-helpers"

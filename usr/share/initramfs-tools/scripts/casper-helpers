@@ -1,10 +1,6 @@
 ## Casper helper functions, used by casper on boot and by casper-snapshot
 
-if [ "${BUILD_SYSTEM}" = "Debian" ] || [ "${BUILD_SYSTEM}" = "Ubuntu" ]; then
-    MP_QUIET="-q"
-else
-    MP_QUIET=""
-fi
+MP_QUIET="-q"
 
 if [ ! -x "/bin/fstype" ]; then
     # klibc not in path -> not in initramfs

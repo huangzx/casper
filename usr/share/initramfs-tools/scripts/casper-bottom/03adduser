@@ -1,0 +1,50 @@
+#!/bin/sh
+
+PREREQ=""
+DESCRIPTION="Adding live session user..."
+
+prereqs()
+{
+       echo "$PREREQ"
+}
+
+case $1 in
+# get pre-requisites
+prereqs)
+       prereqs
+       exit 0
+       ;;
+esac
+
+. /scripts/casper-functions
+
+log_begin_msg "$DESCRIPTION"
+
+chroot /root /usr/sbin/useradd -m -s /bin/bash "$USERNAME"
+chroot /root /usr/sbin/usermod -aG tape,floppy,audio,video,usb,cdrom,netdev,dialout,wheel,sambashare "$USERNAME"
+
+# Empty user's passwd
+chroot /root /bin/chmod +w /etc/shadow
+chroot /root /bin/sed -i '/^'"$USERNAME"':/s/!//g' /etc/shadow
+chroot /root /bin/chmod 400 /etc/shadow
+
+#use chpasswd set passwd
+#chroot /root usermod --password=$PASSWD $USER
+#chroot /root chpasswd <<EOF
+#$USER:$PASSWD
+#EOF
+
+if [ -f /root/etc/sudoers ]; then
+    echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /root/etc/sudoers
+fi
+
+for file in /usr/share/applications/osinstaller.desktop; do  
+
+	if [ -f "/root/$file" ]; then
+        	chroot /root install -d -o $USERNAME -g $USERNAME /home/$USERNAME/Desktop
+        	chroot /root install -D -o $USERNAME -g $USERNAME $file /home/$USERNAME/Desktop/$(basename "$file")
+        	break
+    	fi
+done
+
+log_end_msg

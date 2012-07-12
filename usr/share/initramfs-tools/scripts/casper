@@ -13,15 +13,14 @@ root_snapshot_label="casper-sn"
 home_snapshot_label="home-sn"
 
 USERNAME=casper
-USERFULLNAME="Live session user"
+USERFULLNAME="live session user"
 HOST=live
-BUILD_SYSTEM=Custom
 
 mkdir -p $mountpoint
 tried=/tmp/tried
 
 [ -f /etc/casper.conf ] && . /etc/casper.conf
-export USERNAME USERFULLNAME HOST BUILD_SYSTEM
+export USERNAME USERFULLNAME HOST TMPFSSIZE
 
 . /scripts/casper-helpers
 
@@ -414,7 +413,7 @@ setup_unionfs() {
     mkdir -p /cow
     cowdevice="tmpfs"
     cow_fstype="tmpfs"
-    cow_mountopt="rw,noatime,mode=755"
+    [ "x$TMPFSSIZE" != "x$TMPFSSIZE" ] && cow_mountopt="rw,noatime,mode=755,size=$TMPFSSIZE" || cow_mountopt="rw,noatime,mode=755"
 
     # Looking for "${root_persistence}" device or file
     if [ -n "${PERSISTENT}" ]; then

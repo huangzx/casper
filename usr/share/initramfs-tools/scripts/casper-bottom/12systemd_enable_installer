@@ -2,6 +2,7 @@
 #
 
 PREREQ=""
+DESCRIPTION="Enable livecd installer..."
 
 prereqs()
 {
@@ -23,7 +24,6 @@ file=osinstaller.service
 for x in $(cat /proc/cmdline); do
 	case $x in 
 	install-automatic|install-nodesktop)
-		log_begin_msg "Enable Ylmf OS livecd installer..."
 		chroot /root /bin/systemctl enable $file
 		break ;;
 	*)

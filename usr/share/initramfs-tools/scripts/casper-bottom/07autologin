@@ -37,14 +37,6 @@ TimedLoginEnable=true\n\
 TimedLogin=$USERNAME\n\
 TimedLoginDelay=10"
 
-    # Prevent from updating if parameters already present (persistent usb key)
- #   if ! `grep -qs 'AutomaticLoginEnable' $GDMCustomFile` ; then
- #       if ! `grep -qs '\[daemon\]' $GDMCustomFile` ; then
- #           echo '[daemon]' >> $GDMCustomFile
- #       fi
- #       sed -i "s/\[daemon\]/\[daemon\]\n$AutologinParameters/" $GDMCustomFile
- #   fi
-#fi
 	sed -i 's/AutomaticLoginEnable=false/AutomaticLoginEnable=true/g'  $GDMCustomFile
 	sed -i 's/AutomaticLogin=/AutomaticLogin='"$USERNAME"'/g'          $GDMCustomFile
 	sed -i 's/TimedLoginEnable=false/TimedLoginEnable=true/g'          $GDMCustomFile
@@ -54,7 +46,6 @@ fi
 
 # kdm
 if [ -f /root/etc/kde4/kdm/kdmrc ]; then
-    # Configure KDM autologin
     sed -i -r \
         -e "s/^#?AutoLoginEnable=.*\$/AutoLoginEnable=true/" \
         -e "s/^#?AutoLoginUser=.*\$/AutoLoginUser=$USERNAME/" \
@@ -64,21 +55,10 @@ fi
 
 # lxdm
 if [ -f /root/etc/lxdm/lxdm.conf ]; then
-    # Configure LXDM autologin with LXDE session
    sed -i -r \
         -e "s/^# autologin=dgod/autologin=$USERNAME/" \
         -e "s/^# session/session/" \
-        -e "s/startlxde/startlubuntu/" \
         /root/etc/lxdm/lxdm.conf
-fi
-
-if [ -f /root/etc/xdg/lubuntu/lxdm/lxdm.conf ]; then
-    # Configure LXDM autologin with Lubuntu session
-   sed -i -r \
-        -e "s/^# autologin=dgod/autologin=$USERNAME/" \
-        -e "s/^# session/session/" \
-        -e "s/startlxde/startlubuntu/" \
-        /root/etc/xdg/lubuntu/lxdm/lxdm.conf
 fi
 
 log_end_msg

@@ -31,7 +31,6 @@ copy_exec /sbin/losetup /sbin
 
 # Casper hooks
 mkdir -p ${DESTDIR}/lib/casper
-copy_exec /usr/share/casper/casper-reconfigure /bin
 copy_exec /usr/share/casper/casper-preseed /bin
 copy_exec /usr/share/casper/casper-set-selections /bin
 
