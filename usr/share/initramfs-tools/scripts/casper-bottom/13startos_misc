@@ -16,12 +16,14 @@ prereqs)
        ;;
 esac
 
+. /scripts/casper-functions
+
 log_begin_msg "$DESCRIPTION"
 
 sizefile=/cdrom/casper/filesystem.size
 
-if [ -f "$sizefile" ]; then
-	cat $sizefile >/root/etc/filesystem.size	
+if [ -e "$sizefile" ]; then
+	cat $sizefile >/root/etc/filesystem.size
 fi
 
 log_end_msg
