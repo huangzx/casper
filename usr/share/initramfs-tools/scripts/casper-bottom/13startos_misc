@@ -20,7 +20,7 @@ esac
 
 log_begin_msg "$DESCRIPTION"
 
-sizefile=/cdrom/casper/filesystem.size
+sizefile=/root/cdrom/casper/filesystem.size
 
 if [ -e "$sizefile" ]; then
 	cat $sizefile >/root/etc/filesystem.size
