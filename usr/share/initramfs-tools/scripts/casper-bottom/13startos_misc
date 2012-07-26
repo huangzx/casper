@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PREREQ=""
-DESCRIPTION="Searching filesystem.size file..."
+DESCRIPTION="StartOS misc tools..."
 
 prereqs()
 {
@@ -20,10 +20,15 @@ esac
 
 log_begin_msg "$DESCRIPTION"
 
-sizefile=/root/cdrom/casper/filesystem.size
+sizefile="/root/cdrom/.disk/size"
+datefile="/root/cdrom/.disk/date"
 
 if [ -e "$sizefile" ]; then
-	cat $sizefile >/root/etc/filesystem.size
+	cat "$sizefile" >/root/etc/filesystem.size
+fi
+
+if [ -e "$datefile" ]; then
+	cat "$datefile" >/root/etc/build.date
 fi
 
 log_end_msg
