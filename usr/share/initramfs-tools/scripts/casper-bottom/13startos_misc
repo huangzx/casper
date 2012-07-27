@@ -20,6 +20,7 @@ esac
 
 log_begin_msg "$DESCRIPTION"
 
+# filesyste size and date of building ISO
 sizefile="/root/cdrom/.disk/size"
 datefile="/root/cdrom/.disk/date"
 
@@ -30,5 +31,17 @@ fi
 if [ -e "$datefile" ]; then
 	cat "$datefile" >/root/etc/build.date
 fi
+
+# change background picture in livecd
+for ARG in $(cat /proc/cmdline); do
+	case "${ARG}" in
+		boot=casper)
+			if [ -x /root/usr/bin/gconftool-2 ]; then
+				configfile=$(chroot /root /usr/bin/gconftool-2 --get-default-source)
+				chroot /root /usr/bin/gconftool-2 --direct --config-source="$configfile" --type "string" --set "/desktop/gnome/background/picture_filename" "/usr/share/backgrounds/livecd.jpg"
+			fi
+			break
+	esac
+done
 
 log_end_msg
