@@ -34,8 +34,9 @@ fi
 # commandline
 for x in $(cat /proc/cmdline); do
     case $x in
-	locale=*)
-	    locale=${x#locale=}
+	locale=*|lang=*)
+	    locale=${x#lang=}	
+	    [ -z "${locale}" ] && locale=${x#locale=}
 	    set_locale="true"
 	    break ;;
     esac
