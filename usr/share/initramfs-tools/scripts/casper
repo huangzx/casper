@@ -413,7 +413,7 @@ setup_unionfs() {
     mkdir -p /cow
     cowdevice="tmpfs"
     cow_fstype="tmpfs"
-    [ "x$TMPFSSIZE" != "x$TMPFSSIZE" ] && cow_mountopt="rw,noatime,mode=755,size=$TMPFSSIZE" || cow_mountopt="rw,noatime,mode=755"
+    [ "x$TMPFSSIZE" != "x" ] && cow_mountopt="rw,noatime,mode=755,size=$TMPFSSIZE" || cow_mountopt="rw,noatime,mode=755"
 
     # Looking for "${root_persistence}" device or file
     if [ -n "${PERSISTENT}" ]; then
