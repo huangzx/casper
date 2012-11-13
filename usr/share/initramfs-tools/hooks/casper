@@ -34,8 +34,8 @@ copy_exec /sbin/losetup /sbin
 
 # Casper hooks
 mkdir -p ${DESTDIR}/lib/casper
-copy_exec /usr/share/casper/casper-preseed /bin
-copy_exec /usr/share/casper/casper-set-selections /bin
+#copy_exec /usr/share/casper/casper-preseed /bin
+#copy_exec /usr/share/casper/casper-set-selections /bin
 
 mkdir -p ${DESTDIR}/lib/udev/rules.d
 cp -p /lib/udev/rules.d/60-cdrom_id.rules ${DESTDIR}/lib/udev/rules.d/
