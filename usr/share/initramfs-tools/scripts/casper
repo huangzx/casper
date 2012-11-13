@@ -6,6 +6,7 @@ export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 
 mountpoint=/cdrom
 LIVE_MEDIA_PATH=casper
+[ -f /conf/uuid.conf ] && UUID="$(cat /conf/uuid.conf)"
 
 root_persistence="casper-rw"
 home_persistence="home-rw"
@@ -37,16 +38,20 @@ parse_cmdline() {
                 export PERSISTENT="Yes" ;;
             nopersistent)
                 export PERSISTENT="" ;;
+	    persistent-path=*)
+	    	export PERSISTENT_PATH="${x#persistent-path=}" ;;
             union=*)
                 export UNIONFS="${x#union=}";;
-            ip*)
+            ip=*)
                 STATICIP=${x#ip=}
                 if [ "${STATICIP}" = "" ]; then
                     STATICIP="frommedia"
                 fi
                 export STATICIP ;;
+	   uuid=*)
+	        UUID=${x#uuid=} ;;
             ignore_uuid)
-                IGNORE_UUID="Yes" ;;
+	        UUID="" ;;
             live-media-path=*)
                 LIVE_MEDIA_PATH="${x#live-media-path=}"
                 export LIVE_MEDIA_PATH
@@ -58,7 +63,7 @@ parse_cmdline() {
         esac
     done
     if [ "${UNIONFS}" = "" ]; then
-        export UNIONFS="aufs"
+        export UNIONFS="DEFAULT"
     fi
 }
 
@@ -75,15 +80,14 @@ is_casper_path() {
 }
 
 matches_uuid() {
-    if [ "$IGNORE_UUID" ] || [ ! -e /conf/uuid.conf ]; then
+    if [ -z "$UUID" ]; then
         return 0
     fi
     path="$1"
-    uuid="$(cat /conf/uuid.conf)"
     for try_uuid_file in "$path/.disk/casper-uuid"*; do
         [ -e "$try_uuid_file" ] || continue
         try_uuid="$(cat "$try_uuid_file")"
-        if [ "$uuid" = "$try_uuid" ]; then
+	if [ "$UUID" = "$try_uuid" ]; then
             return 0
         fi
     done
@@ -128,7 +132,8 @@ mount_images_in_directory() {
 
 is_nice_device() {
     sysfs_path="${1#/sys}"
-    if /lib/udev/path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|scsi|usb)|platform-orion-ehci|platform-mmc|platform-mxsdhci)"; then
+    #if /lib/udev/path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|scsi|usb)|platform-orion-ehci|platform-mmc|platform-mxsdhci)"; then
+    if /sbin/udevadm test-builtin path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|sas|scsi|usb|virtio)|platform-sata_mv|platform-orion-ehci|platform-mmc|platform-mxsdhci|platform-omap_hsmmc|platform-sdhci-tegra)"; then
         return 0
     fi
     if echo ${sysfs_path} | grep -q "^/block/dm-"; then
@@ -190,7 +195,8 @@ do_netmount() {
     /sbin/udevadm trigger
     /sbin/udevadm settle
 
-    ipconfig ${DEVICE} /tmp/net-${DEVICE}.conf | tee /netboot.config
+    configure_networking
+    export DEVICE
 
     if [ "${NFSROOT}" = "auto" ]; then
         NFSROOT=${ROOTSERVER}:${ROOTPATH}
@@ -361,15 +367,23 @@ setup_unionfs() {
     image_directory="$1"
     rootmnt="$2"
 
-    case ${UNIONFS} in
-        aufs|unionfs)
-            modprobe "${MP_QUIET}" -b ${UNIONFS} || true
-            if ! cut -f2 /proc/filesystems | grep -q "^${UNIONFS}\$" && \
-               [ -x /bin/unionfs-fuse ]; then
-                UNIONFS="unionfs-fuse"
-            fi
-            ;;
-    esac
+    if [ "${UNIONFS}" = 'DEFAULT' ]; then
+       for union in 'overlayfs' 'aufs' 'unionfs'
+       do
+            modprobe "${MP_QUIET}" -b ${union} || true
+            if cut -f2 /proc/filesystems | grep -q "^${union}\$"; then
+               UNIONFS="${union}"
+               break
+           fi
+       done
+    fi
+    if [ "${UNIONFS}" = 'DEFAULT' -a -x /bin/unionfs-fuse ]; then
+       UNIONFS="unionfs-fuse"
+    fi
+    # If all else fails fall back to aufs.
+    if [ "${UNIONFS}" = 'DEFAULT' ]; then
+       UNIONFS='aufs'
+    fi
 
     # run-init can't deal with images in a subdir, but we're going to
     # move all of these away before it runs anyway.  No, we're not,
@@ -435,9 +449,29 @@ setup_unionfs() {
             mkdir -p /dev/.initramfs/varrun
             pidof unionfs-fuse >> /dev/.initramfs/varrun/sendsigs.omit || true
             ;;
-        *)
+	aufs|unionfs)    
             mount -t ${UNIONFS} -o noatime,dirs=/cow=rw:$rofsstring ${UNIONFS} "$rootmnt" || panic "${UNIONFS} mount failed"
             ;;
+       overlayfs)
+           # Mount the layers pairwise from the bottom onto rootmnt,
+           # for the second and later layers rootmnt forms the lower layer.
+           mounts=""
+           for mount in /cow $rofslist
+           do
+               mounts="$mount $mounts"
+           done
+           lower=""
+           for mount in $mounts
+           do
+               if [ "$lower" = "" ]; then
+                   lower="$mount"
+                   continue
+               fi
+               mount -t overlayfs -o "upperdir=$mount,lowerdir=$lower" \
+                   "$mount" "$rootmnt"
+               lower="$rootmnt"
+           done
+           ;;
     esac
 
     # Adding other custom mounts
@@ -520,7 +554,7 @@ check_dev ()
         mount -t ${fstype} -o ro,noatime "${devname}" $mountpoint || continue
         [ -n "$devuid" ] && echo "$devuid" >> $tried
         if is_casper_path $mountpoint && \
-           ([ "$skip_uuid_check" ] || matches_uuid $mountpoint); then
+		([ "$skip_uuid_check" ] || [ "$UUID" = "$devuid" ] || matches_uuid $mountpoint); then
             echo $mountpoint
             return 0
         else
@@ -566,7 +600,8 @@ find_livefs() {
         elif [ "${fstype}" = "squashfs" -o \
                 "${fstype}" = "ext4" -o \
                 "${fstype}" = "ext3" -o \
-                "${fstype}" = "ext2" ]; then
+		"${fstype}" = "ext2" -o \
+		"${fstype}" = "btrfs" ]; then
             # This is an ugly hack situation, the block device has
             # an image directly on it.  It's hopefully
             # casper, so take it and run with it.
@@ -648,6 +683,18 @@ mountroot() {
     mount_images_in_directory "${livefs_root}" "${rootmnt}"
 
     log_end_msg
+
+    # Allow to override USERNAME and HOST based on media information
+    # make it skipable by setting FLAVOUR= in casper.conf
+    if [ -f /cdrom/.disk/info ] && [ -z "$FLAVOUR" ]; then
+    	FLAVOUR="$(cut -d' ' -f1 "/cdrom/.disk/info" 2>/dev/null | tr '[A-Z]' '[a-z]')" || FLAVOUR=
+    	if [ -n "$FLAVOUR" ]; then
+                HOST=$FLAVOUR
+                USERNAME=$FLAVOUR
+                export HOST USERNAME
+                sed  -i "s,USERNAME=.*,USERNAME=\"$FLAVOUR\",g; s,HOST=.*,HOST=\"$FLAVOUR\",g" /etc/casper.conf
+        fi
+    fi
 
     # unionfs-fuse needs /dev to be bind-mounted for the duration of
     # casper-bottom; udev's init script will take care of things after that

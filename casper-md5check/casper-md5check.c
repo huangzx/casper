@@ -33,11 +33,13 @@
 #include <math.h>
 #include <termios.h>
 
-#include "/usr/include/plymouth-1/ply-boot-client/ply-boot-client.h"
-#include "/usr/include/plymouth-1/ply/ply-event-loop.h"
+#include <ply-boot-client.h>
+#include <ply-event-loop.h>
 
 #include "md5.h"
 #define DEBUG
+
+#define MD5_LEN 16
 
 static int verbose = 1;
 static int got_plymouth = 0;
@@ -222,6 +224,15 @@ int set_nocanonical_tty(int fd) {
   return tcsetattr(fd, TCSANOW, &t);
 }
 
+int is_md5sum(const char *checksum)
+{
+  if (strlen(checksum) != MD5_LEN * 2)
+    return 0;
+  if (strspn(checksum, "0123456789abcdef") != MD5_LEN * 2)
+    return 0;
+  return 1;
+}
+
 int main(int argc, char **argv) {
   
   int check_fd;
@@ -229,8 +240,8 @@ int main(int argc, char **argv) {
   
   FILE *md5_file;
   md5_state_t state;
-  md5_byte_t digest[16];
-  char hex_output[16*2 + 1];
+  md5_byte_t digest[MD5_LEN];
+  char hex_output[MD5_LEN * 2 + 1];
   char *checksum, *checkfile;
   ssize_t tsize, csize;
   ply_boot_client_t *client = NULL;
@@ -276,6 +287,9 @@ int main(int argc, char **argv) {
   while (fscanf(md5_file, "%as %a[^\n]", &checksum, &checkfile) == 2) {
     struct stat statbuf;
 
+    if (!is_md5sum(checksum))
+      continue;
+
     if (stat(checkfile, &statbuf) == 0) {
       tsize += statbuf.st_size;
     }
@@ -290,6 +304,9 @@ int main(int argc, char **argv) {
     ssize_t rsize;
     int i;
     
+    if (!is_md5sum(checksum))
+      continue;
+
     md5_init(&state);
     
     plymouth_text(client, "Checking %s", checkfile);
@@ -313,7 +330,7 @@ int main(int argc, char **argv) {
     close(check_fd);
     md5_finish(&state, digest);
     
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < MD5_LEN; i++)
       sprintf(hex_output + i * 2, "%02x", digest[i]);
     
     if (strncmp(hex_output, checksum, strlen(hex_output)) == 0) {
