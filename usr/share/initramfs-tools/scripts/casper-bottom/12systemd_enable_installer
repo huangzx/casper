@@ -24,10 +24,10 @@ file=osinstaller.service
 for x in $(cat /proc/cmdline); do
 	case $x in 
 	install-automatic|install-nodesktop)
-		chroot /root /bin/systemctl enable $file
+		chroot /root /usr/bin/systemctl enable $file
 		break ;;
 	*)
-		chroot /root /bin/systemctl disable $file
+		chroot /root /usr/bin/systemctl disable $file
 	esac
 
 done
