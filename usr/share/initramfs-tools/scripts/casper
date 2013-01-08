@@ -132,9 +132,7 @@ mount_images_in_directory() {
 
 is_nice_device() {
     sysfs_path="${1#/sys}"
-    #FIXME StartOS 5.0's udev is too old, not support '/sbin/udevadm test-builtin'. :(
-    #if /sbin/udevadm test-builtin path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|sas|scsi|usb|virtio)|platform-sata_mv|platform-orion-ehci|platform-mmc|platform-mxsdhci|platform-omap_hsmmc|platform-sdhci-tegra|platform-tegra-ehci)"; then
-    if /lib/udev/path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|scsi|usb)|platform-orion-ehci|platform-mmc|platform-mxsdhci)"; then
+    if /usr/bin/udevadm test-builtin path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|sas|scsi|usb|virtio)|platform-sata_mv|platform-orion-ehci|platform-mmc|platform-mxsdhci|platform-omap_hsmmc|platform-sdhci-tegra|platform-tegra-ehci)"; then
         return 0
     fi
     if echo ${sysfs_path} | grep -q "^/block/dm-"; then
@@ -193,8 +191,8 @@ do_netmount() {
 
     modprobe "${MP_QUIET}" af_packet # For DHCP
 
-    /sbin/udevadm trigger
-    /sbin/udevadm settle
+    /usr/bin/udevadm trigger
+    /usr/bin/udevadm settle
 
     configure_networking
     export DEVICE
@@ -588,7 +586,7 @@ find_livefs() {
         devname=$(sys2dev "${sysblock}")
         [ -e "$devname" ] || continue
         fstype=$(get_fstype "${devname}")
-        if /lib/udev/cdrom_id ${devname} > /dev/null; then
+        if /usr/lib/udev/cdrom_id ${devname} > /dev/null; then
             if check_dev "null" "${devname}" ; then
                 return 0
             fi

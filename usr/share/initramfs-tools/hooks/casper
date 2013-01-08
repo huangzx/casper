@@ -37,9 +37,11 @@ mkdir -p ${DESTDIR}/lib/casper
 #copy_exec /usr/share/casper/casper-preseed /bin
 #copy_exec /usr/share/casper/casper-set-selections /bin
 
-mkdir -p ${DESTDIR}/lib/udev/rules.d
-cp -p /lib/udev/rules.d/60-cdrom_id.rules ${DESTDIR}/lib/udev/rules.d/
-copy_exec /lib/udev/cdrom_id /lib/udev
+# udev
+[ $(udevd --version) -ge 196 ] && UDEVHOME="/usr/lib" || UDEVHOME="/lib"
+mkdir -p ${DESTDIR}/$UDEVHOME/udev/rules.d
+cp -p $UDEVHOME/udev/rules.d/60-cdrom_id.rules ${DESTDIR}/$UDEVHOME/udev/rules.d/
+copy_exec $UDEVHOME/udev/cdrom_id $UDEVHOME/udev
 copy_exec /usr/bin/eject /bin
 
 # cifs boot
@@ -71,7 +73,7 @@ manual_add_modules sbp2
 manual_add_modules ohci1394
 
 # integrity check
-copy_exec /usr/lib/casper/casper-md5check /bin
+[ -f /usr/lib/casper/casper-md5check ] && copy_exec /usr/lib/casper/casper-md5check /bin
 
 cp /usr/share/initramfs-tools/scripts/casper-functions $DESTDIR/scripts
 cp /usr/share/initramfs-tools/scripts/casper-helpers $DESTDIR/scripts
