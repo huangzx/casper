@@ -20,8 +20,12 @@ esac
 
 log_begin_msg "$DESCRIPTION"
 
+#tape,floppy,audio,video,usb,cdrom,netdev,dialout,wheel,sambashare,lp,lpadmin,plugdev,scanner
+DEFAULT_GROUPS="floppy audio video wheel sambashare lp scanner"
 chroot /root /usr/sbin/useradd -m -s /bin/bash "$USERNAME"
-chroot /root /usr/sbin/usermod -aG tape,floppy,audio,video,usb,cdrom,netdev,dialout,wheel,sambashare,lp,lpadmin,plugdev,scanner "$USERNAME"
+for g in $DEFAULT_GROUPS; do
+    chroot /root /usr/sbin/usermod -aG "$g" "$USERNAME"
+done
 
 # Empty user's passwd
 chroot /root /bin/chmod +w /etc/shadow
