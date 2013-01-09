@@ -135,9 +135,12 @@ is_nice_device() {
     if /usr/bin/udevadm test-builtin path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|sas|scsi|usb|virtio)|platform-sata_mv|platform-orion-ehci|platform-mmc|platform-mxsdhci|platform-omap_hsmmc|platform-sdhci-tegra|platform-tegra-ehci)"; then
         return 0
     fi
-    if echo ${sysfs_path} | grep -q "^/block/dm-"; then
-        return 0
-    fi
+    # more possibility, more devices support.    
+    echo "${sysfs_path}" | grep -q "^/block/dm-" && return 0
+    echo "${sysfs_path}" | grep -q "^/block/vd[a-z]$" && return 0
+    echo "${sysfs_path}" | grep -q "^/block/mtdblock" && return 0
+    [ -e /sys/"${sysfs_path}" ] && return 0
+
     return 1
 }
 
