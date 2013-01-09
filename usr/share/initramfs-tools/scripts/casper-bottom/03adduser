@@ -27,9 +27,9 @@ for g in $DEFAULT_GROUPS; do
     chroot /root /usr/sbin/usermod -aG "$g" "$USERNAME"
 done
 
-# Empty user's passwd
+# U6aMy0wojraho is just a blank password
 chroot /root /bin/chmod +w /etc/shadow
-chroot /root /bin/sed -i '/^'"$USERNAME"':/s/!//g' /etc/shadow
+chroot /root /bin/sed -i '/^'"$USERNAME"':/s/!/U6aMy0wojraho/g' /etc/shadow
 chroot /root /bin/chmod 400 /etc/shadow
 
 #use chpasswd set passwd
@@ -38,9 +38,9 @@ chroot /root /bin/chmod 400 /etc/shadow
 #$USER:$PASSWD
 #EOF
 
-if [ -f /root/etc/sudoers ]; then
-    echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /root/etc/sudoers
-fi
+#if [ -f /root/etc/sudoers ]; then
+#    echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /root/etc/sudoers
+#fi
 
 for file in /usr/share/applications/osinstaller.desktop; do  
 
