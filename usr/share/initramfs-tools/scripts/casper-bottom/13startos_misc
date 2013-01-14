@@ -40,6 +40,10 @@ for ARG in $(cat /proc/cmdline); do
 				configfile=$(chroot /root /usr/bin/gconftool-2 --get-default-source)
 				chroot /root /usr/bin/gconftool-2 --direct --config-source="$configfile" --type "string" --set "/desktop/gnome/background/picture_filename" "/usr/share/backgrounds/livecd.jpg"
 			fi
+
+            if [ -x /root/usr/bin/gsettings ]; then
+                chroot /root su "$USERNAME" -c "/usr/bin/gsettings set org.gnome.desktop.background picture-uri file:////usr/share/backgrounds/livecd.jpg"
+            fi
 			break
 	esac
 done
