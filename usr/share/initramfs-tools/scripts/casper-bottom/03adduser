@@ -44,13 +44,12 @@ if [ -f /root/etc/sudoers ]; then
     echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /root/etc/sudoers
 fi
 
-for file in /usr/share/applications/osinstaller.desktop; do  
-
-	if [ -f "/root/$file" ]; then
-        	chroot /root install -d -o $USERNAME -g $USERNAME /home/$USERNAME/Desktop
-        	chroot /root install -D -o $USERNAME -g $USERNAME $file /home/$USERNAME/Desktop/$(basename "$file")
-        	break
-    	fi
-done
+#for file in /usr/share/applications/osinstaller.desktop; do  
+#	if [ -f "/root/$file" ]; then
+#        	chroot /root install -d -o $USERNAME -g $USERNAME /home/$USERNAME/Desktop
+#        	chroot /root install -D -o $USERNAME -g $USERNAME $file /home/$USERNAME/Desktop/$(basename "$file")
+#        	break
+# 	fi
+#done
 
 log_end_msg

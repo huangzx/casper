@@ -37,38 +37,40 @@ if [ -z "${locale}" ]; then
 fi
 
 if [ "${set_locale}" ]; then
+    # locale
     LANG=$(grep "^${locale}" /root/usr/share/i18n/SUPPORTED | grep UTF-8 |sed -e 's, .*,,' -e q)
     printf 'LANG="%s"\n' "${LANG}" > /root/etc/default/locale
     printf 'LANG="%s"\n' "${LANG}" >> /root/etc/environment
     printf '%s UTF-8\n' "${LANG}" > /root/etc/locale.gen
     chroot /root /usr/sbin/locale-gen "${LANG}"
-    #
     case ${LANG%%.*} in
-            zh_TW|zh_tw)
+        zh_TW|zh_tw)
 		    timez="Asia/Taipei"
 		    LANGUAGE='"zh_TW:zh"' ;;
 	    zh_HK|zh_hk)
 		    timez="Asia/Hong_Kong"
-		     LANGUAGE='"zh_HK:zh"' ;;
-	     en_US|en_us)
-	              timez="UTC"
-	              LANGUAGE='"en_US:en"'  ;;
+		    LANGUAGE='"zh_HK:zh"' ;;
+	    en_US|en_us)
+	        timez="UTC"
+	        LANGUAGE='"en_US:en"' ;;
 	    zh_CN|zh_cn|*)
-	               timez="Asia/Shanghai"
-	               LANGUAGE='"zh_CN:zh"' 
+	        timez="Asia/Shanghai"
+	        LANGUAGE='"zh_CN:zh"' 
      esac
+     # timezone
      printf 'LANGUAGE="%s"\n' "${LANGUAGE}" >> /root/etc/default/locale
-     if [ -f /root/usr/share/zoneinfo/${timez} ]; then
-     	     [ -h /root/etc/localtime ] && rm -f /root/etc/localtime
-	     cat /root/usr/share/zoneinfo/${timez}  >/root/etc/localtime
- 	     echo ${timez}                          >/root/etc/timezone	
+     if [ -e /root/usr/share/zoneinfo/${timez} ]; then
+        [ -e /root/etc/localtime ] && rm -f /root/etc/localtime
+	    ln -sf /usr/share/zoneinfo/${timez} /root/etc/localtime
+ 	    echo ${timez} >/root/etc/timezone	
      fi
 fi
 
 # Creat well known users dirs, depends on locale
 if [ -x /root/usr/bin/xdg-user-dirs-update ];then
 	. /etc/casper.conf
-	chroot /root su "$USERNAME" -c "/usr/bin/xdg-user-dirs-update"
+    . /root/etc/environment
+	chroot /root su "$USERNAME" -c "LANG=$LANG /usr/bin/xdg-user-dirs-update --force"
 fi
 
 log_end_msg
