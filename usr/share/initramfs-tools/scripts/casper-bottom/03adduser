@@ -38,9 +38,11 @@ chroot /root /bin/chmod 400 /etc/shadow
 #$USER:$PASSWD
 #EOF
 
-#if [ -f /root/etc/sudoers ]; then
-#    echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /root/etc/sudoers
-#fi
+# NOTE:
+# This is required by osinstaller.
+if [ -f /root/etc/sudoers ]; then
+    echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /root/etc/sudoers
+fi
 
 for file in /usr/share/applications/osinstaller.desktop; do  
 
