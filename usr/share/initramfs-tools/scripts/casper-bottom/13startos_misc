@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PREREQ=""
-DESCRIPTION="StartOS misc tools..."
+DESCRIPTION="StartOS misc settings..."
 
 prereqs()
 {
@@ -39,11 +39,18 @@ for ARG in $(cat /proc/cmdline); do
 			if [ -x /root/usr/bin/gconftool-2 ]; then
 				configfile=$(chroot /root /usr/bin/gconftool-2 --get-default-source)
 				chroot /root /usr/bin/gconftool-2 --direct --config-source="$configfile" --type "string" --set "/desktop/gnome/background/picture_filename" "/usr/share/backgrounds/livecd.jpg"
+                break    
 			fi
 
-            if [ -x /root/usr/bin/gsettings ]; then
-                chroot /root su "$USERNAME" -c "/usr/bin/gsettings set org.gnome.desktop.background picture-uri file:////usr/share/backgrounds/livecd.jpg"
-            fi
+            #if [ -x /root/usr/bin/gsettings ]; then
+            #    chroot /root su "$USERNAME" -c "/usr/bin/gsettings set org.gnome.desktop.background picture-uri file:////usr/share/backgrounds/livecd.jpg"
+            #fi
+
+            # NOTE:
+            # file:///usr/share/backgrounds/default is specified in org.gnome.startos.gschema.override
+            # to be default backgourd picture uri.
+            # so make a symlink here.
+            ln -sf /usr/share/backgrounds/livecd.jpg /root/usr/share/backgrounds/default
 			break
 	esac
 done
