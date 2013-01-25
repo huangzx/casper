@@ -20,7 +20,7 @@ esac
 
 log_begin_msg "$DESCRIPTION"
 
-# filesyste size and date of building ISO
+# filesyste size and date of distribution ISO
 sizefile="/root/cdrom/.disk/size"
 datefile="/root/cdrom/.disk/date"
 
@@ -36,22 +36,20 @@ fi
 for ARG in $(cat /proc/cmdline); do
 	case "${ARG}" in
 		boot=casper)
-			if [ -x /root/usr/bin/gconftool-2 ]; then
-				configfile=$(chroot /root /usr/bin/gconftool-2 --get-default-source)
-				chroot /root /usr/bin/gconftool-2 --direct --config-source="$configfile" --type "string" --set "/desktop/gnome/background/picture_filename" "/usr/share/backgrounds/livecd.jpg"
-                break    
-			fi
+	if [ -x /root/usr/bin/gconftool-2 ]; then
+		configfile=$(chroot /root /usr/bin/gconftool-2 --get-default-source)
+		chroot /root /usr/bin/gconftool-2 --direct --config-source="$configfile" --type "string" --set "/desktop/gnome/background/picture_filename" "/usr/share/backgrounds/livecd.jpg"
+	fi
 
-            #if [ -x /root/usr/bin/gsettings ]; then
-            #    chroot /root su "$USERNAME" -c "/usr/bin/gsettings set org.gnome.desktop.background picture-uri file:////usr/share/backgrounds/livecd.jpg"
-            #fi
-
-            # NOTE:
-            # file:///usr/share/backgrounds/default is specified in org.gnome.startos.gschema.override
-            # to be default backgourd picture uri.
-            # so make a symlink here.
-            ln -sf /usr/share/backgrounds/livecd.jpg /root/usr/share/backgrounds/default
-			break
+	if [ -x /root/usr/bin/gsettings ]; then
+    	    # NOTE:
+      		# file:///usr/share/backgrounds/default is specified in org.gnome.startos.gschema.override
+       		# to be default backgourd picture uri.
+       		# so make a symlink here.
+        	# chroot /root su "$USERNAME" -c "/usr/bin/gsettings set org.gnome.desktop.background picture-uri file:////usr/share/backgrounds/livecd.jpg"
+       	 	chroot /root ln -sf "/usr/share/backgrounds/livecd.jpg" "/usr/share/backgrounds/default"
+	fi
+	break
 	esac
 done
 
