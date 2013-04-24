@@ -22,19 +22,21 @@ esac
 log_begin_msg "$DESCRIPTION"
 
 devices=""
-for device in /dev/[hs]d[a-z][0-9]*; do
-    if ! [ -b "$device" ]; then
+for device in /sys/block/[hs]d[a-z]/[hs]d[a-z][0-9]*; do
+    if ! [ -b "/dev/${device##*/}" ]; then
         continue
     fi
 
-    /sbin/blkid -o udev -p ${device%%[0-9]*} | grep -q "^ID_FS_USAGE=raid" && continue
+    /usr/bin/udevadm test-builtin blkid "$device" 2>/dev/null | grep -q "^ID_FS_USAGE=raid" && continue
+    
+    device="/dev/${device##*/}"
 
     magic=$(/bin/dd if="$device" bs=4086 skip=1 count=1 2>/dev/null | /bin/dd bs=10 count=1 2>/dev/null) || continue
     
     if [ "$magic" = "SWAPSPACE2" -o "$magic" = "SWAP-SPACE" ]; then
-#        log "Found $device"
+        # log "Found $device"
         devices="$devices $device"
-        fi
+    fi
 done
 
 for device in $devices; do
