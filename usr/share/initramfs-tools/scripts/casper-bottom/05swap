@@ -27,7 +27,7 @@ for device in /sys/block/[hs]d[a-z]/[hs]d[a-z][0-9]*; do
         continue
     fi
 
-    /usr/bin/udevadm test-builtin blkid "$device" 2>/dev/null | grep -q "^ID_FS_USAGE=raid" && continue
+    udevadm test-builtin blkid "$device" 2>/dev/null | grep -q "^ID_FS_USAGE=raid" && continue
     
     device="/dev/${device##*/}"
 

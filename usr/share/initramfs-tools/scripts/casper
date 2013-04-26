@@ -132,7 +132,7 @@ mount_images_in_directory() {
 
 is_nice_device() {
     sysfs_path="${1#/sys}"
-    if /usr/bin/udevadm test-builtin path_id "${sysfs_path}" | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|sas|scsi|usb|virtio)|platform-sata_mv|platform-orion-ehci|platform-mmc|platform-mxsdhci|platform-omap_hsmmc|platform-sdhci-tegra|platform-tegra-ehci)"; then
+    if udevadm test-builtin path_id "${sysfs_path}" 2>/dev/null | egrep -q "ID_PATH=(usb|pci-[^-]*-(ide|sas|scsi|usb|virtio)|platform-sata_mv|platform-orion-ehci|platform-mmc|platform-mxsdhci|platform-omap_hsmmc|platform-sdhci-tegra|platform-tegra-ehci)"; then
         return 0
     fi
     # more possibility, more devices support.    
@@ -194,8 +194,8 @@ do_netmount() {
 
     modprobe "${MP_QUIET}" af_packet # For DHCP
 
-    /usr/bin/udevadm trigger
-    /usr/bin/udevadm settle
+    udevadm trigger
+    udevadm settle
 
     configure_networking
     export DEVICE
@@ -320,16 +320,7 @@ try_snap ()
                  return 1
             fi
         else
-            # cpio.gz snapshot
-            # Unfortunately klibc's cpio is incompatible with the rest of
-            # the world; everything else requires -u -d, while klibc doesn't
-            # implement them. Try to detect whether it's in use.
-            cpiopath="$(which cpio)" || true
-            if [ "$cpiopath" ] && grep -aq /lib/klibc "$cpiopath"; then
-                cpioargs=
-            else
-                cpioargs='-u -d'
-            fi
+            cpioargs='-u -d'
             if ! (cd "${snap_mount}" && zcat "${snapback}/${snapfile}" | cpio -i $cpioargs 2>/dev/null) ; then
                 log_warning_msg "Impossible to include the ${snapfile} Snapshot"
                 return 1
@@ -551,7 +542,7 @@ check_dev ()
 
     fstype=$(get_fstype "${devname}")
     if is_supported_fs ${fstype}; then
-        devuid=$(blkid -o value -s UUID "$devname")
+        devuid=$(udevadm_wrapper UUID "$devname")
         [ -n "$devuid" ] && grep -qs "\<$devuid\>" $tried && continue
         mount -t ${fstype} -o ro,noatime "${devname}" $mountpoint || continue
         [ -n "$devuid" ] && echo "$devuid" >> $tried

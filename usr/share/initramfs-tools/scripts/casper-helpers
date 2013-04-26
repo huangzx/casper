@@ -2,14 +2,9 @@
 
 MP_QUIET="-q"
 
-if [ ! -x "/bin/fstype" ]; then
-    # klibc not in path -> not in initramfs
-    export PATH="${PATH}:/usr/lib/klibc/bin"
-fi
-
 sys2dev() {
     sysdev=${1#/sys}
-    echo "/dev/$(/usr/bin/udevadm info -q name -p ${sysdev} 2>/dev/null|| echo ${sysdev##*/})"
+    echo "/dev/$(udevadm info -q name -p ${sysdev} 2>/dev/null || echo ${sysdev##*/})"
 }
 
 subdevices() {
@@ -27,7 +22,7 @@ is_supported_fs () {
     # FIXME: do something better like the scan of supported filesystems
     fstype="${1}"
     case ${fstype} in
-    	vfat|iso9660|udf|ext2|ext3|ext4|btrfs|ntfs)
+    	vfat|iso9660|udf|ext2|ext3|ext4|ext4dev|btrfs|ntfs)
             return 0
             ;;
     esac
@@ -37,13 +32,8 @@ is_supported_fs () {
 get_fstype() {
     local FSTYPE
     local FSSIZE
-    eval $(fstype < $1)
-    if [ "$FSTYPE" != "unknown" ]; then
-      echo $FSTYPE
-      return 0
-    fi
 
-    /sbin/blkid -s TYPE -o value $1 2>/dev/null
+    udevadm_wrapper TYPE "$1"
 }
 
 where_is_mounted() {
@@ -122,7 +112,7 @@ setup_loop() {
     local offset=$4
 
     modprobe ${MP_QUIET} -b "$module"
-    /usr/bin/udevadm settle
+    udevadm settle
 
     if [ "$module" = loop ]; then
         if [ ! -e /dev/loop0 ]; then
@@ -206,7 +196,7 @@ find_cow_device() {
 	fi
         for dev in $(subdevices "${sysblock}"); do
             devname=$(sys2dev "${dev}")
-            if [ "$(/sbin/blkid -s LABEL -o value $devname 2>/dev/null)" = "${pers_label}" ]; then
+            if [ "$(udevadm_wrapper LABEL $devname)" = "${pers_label}" ]; then
                 echo "$devname"
                 return
             # Do not add any filesystem types here that might be able to
