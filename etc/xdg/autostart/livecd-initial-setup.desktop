@@ -1,0 +1,18 @@
+[Desktop Entry]
+Name=livecd-initial-setup
+Name[zh_CN]=LiveCD 初始化设置
+Name[zh_TW]=LiveCD 初始化設置
+Comment=Initial setup for LiveCD
+Comment[zh_CN]=LiveCD 模式下的初始化设置
+Comment[zh_TW]=LiveCD 模式下的初始化設置
+Exec=livecd-initial-setup
+Icon=
+Terminal=false
+Type=Application
+Categories=System;Utility;
+StartupNotify=false
+X-GNOME-Autostart-Phase=Applications
+X-GNOME-AutoRestart=false
+X-GNOME-Autostart-Notify=false
+X-KDE-autostart-after=panel
+X-KDE-StartupNotify=false

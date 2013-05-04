@@ -5,32 +5,35 @@ DESCRIPTION="Adding live session user..."
 
 prereqs()
 {
-       echo "$PREREQ"
+    echo "$PREREQ"
 }
 
 case $1 in
 # get pre-requisites
 prereqs)
-       prereqs
-       exit 0
-       ;;
+    prereqs
+    exit 0
+    ;;
 esac
 
 . /scripts/casper-functions
 
 log_begin_msg "$DESCRIPTION"
 
+# Add user
 #tape,floppy,audio,video,usb,cdrom,netdev,dialout,wheel,sambashare,lp,lpadmin,plugdev,scanner
 DEFAULT_GROUPS="floppy audio video wheel sambashare lp scanner"
 chroot /root /usr/sbin/useradd -m -s /bin/bash "$USERNAME"
-for g in $DEFAULT_GROUPS; do
-    chroot /root /usr/sbin/usermod -aG "$g" "$USERNAME"
+for group in $DEFAULT_GROUPS; do
+    chroot /root /usr/sbin/usermod -aG "$group" "$USERNAME"
 done
 
-# U6aMy0wojraho is just a blank password
-chroot /root /bin/chmod +w /etc/shadow
-chroot /root /bin/sed -i '/^'"$USERNAME"':/s/!/U6aMy0wojraho/g' /etc/shadow
-chroot /root /bin/chmod 400 /etc/shadow
+# Edit password
+# U6aMy0wojraho is blank password, but we choose empty password.
+#chroot /root /bin/chmod +w /etc/shadow
+#chroot /root /bin/sed -i '/^'"$USERNAME"':/s/!/U6aMy0wojraho/g' /etc/shadow
+#chroot /root /bin/chmod 400 /etc/shadow
+chroot /root /usr/bin/passwd -dq "$USERNAME"
 
 #use chpasswd set passwd
 #chroot /root usermod --password=$PASSWD $USER
@@ -43,13 +46,5 @@ chroot /root /bin/chmod 400 /etc/shadow
 if [ -f /root/etc/sudoers ]; then
     echo "${USERNAME}  ALL=(ALL) NOPASSWD: ALL" >> /root/etc/sudoers
 fi
-
-#for file in /usr/share/applications/osinstaller.desktop; do  
-#	if [ -f "/root/$file" ]; then
-#        	chroot /root install -d -o $USERNAME -g $USERNAME /home/$USERNAME/Desktop
-#        	chroot /root install -D -o $USERNAME -g $USERNAME $file /home/$USERNAME/Desktop/$(basename "$file")
-#        	break
-# 	fi
-#done
 
 log_end_msg

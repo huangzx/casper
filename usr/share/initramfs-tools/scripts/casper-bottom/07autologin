@@ -5,15 +5,15 @@ DESCRIPTION="Setting up automatic login..."
 
 prereqs()
 {
-       echo "$PREREQ"
+    echo "$PREREQ"
 }
 
 case $1 in
 # get pre-requisites
 prereqs)
-       prereqs
-       exit 0
-       ;;
+    prereqs
+    exit 0
+    ;;
 esac
 
 . /scripts/casper-functions
@@ -28,20 +28,23 @@ if [ -f /root/etc/lightdm/lightdm.conf ];then
 fi
 
 # gdm
-if [ -d /root/etc/gdm ]; then
-    # Configure GDM autologin
+if [ -f /root/etc/gdm/custom.conf ]; then
     GDMCustomFile=/root/etc/gdm/custom.conf
-    AutologinParameters="AutomaticLoginEnable=true\n\
-AutomaticLogin=$USERNAME\n\
-TimedLoginEnable=true\n\
-TimedLogin=$USERNAME\n\
-TimedLoginDelay=10"
-
-	sed -i 's/AutomaticLoginEnable=false/AutomaticLoginEnable=true/g'  $GDMCustomFile
-	sed -i 's/AutomaticLogin=/AutomaticLogin='"$USERNAME"'/g'          $GDMCustomFile
-	sed -i 's/TimedLoginEnable=false/TimedLoginEnable=true/g'          $GDMCustomFile
-	sed -i 's/TimedLogin=/TimedLogin='"$USERNAME"'/g'                  $GDMCustomFile
-	sed -i 's/TimedLoginDelay=30/TimedLoginDelay=10/g'                 $GDMCustomFile
+    for para in AutomaticLoginEnable \
+                AutomaticLogin \
+                TimedLoginEnable \
+                TimedLoginDelay \
+                TimedLogin; do
+        if grep -q ^"$para"= $GDMCustomFile; then
+            sed -i '/^'"$para"'=/d' $GDMCustomFile
+        fi
+    done
+    sed -i -r \
+        -e '/\[daemon\]/a#AutomaticLoginEnable=true' \
+        -e '/\[daemon\]/a#AutomaticLogin='"$USERNAME"'' \
+        -e '/\[daemon\]/a#TimedLoginEnable=true' \
+        -e '/\[daemon\]/a#TimedLoginDelay=10' \
+        -e '/\[daemon\]/a#TimedLogin='"$USERNAME"'' $GDMCustomFile	
 fi
 
 # kdm
