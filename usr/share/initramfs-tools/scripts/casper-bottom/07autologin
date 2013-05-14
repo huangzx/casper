@@ -21,22 +21,22 @@ esac
 log_begin_msg "$DESCRIPTION"
 
 # lightdm
-if [ -f /root/etc/lightdm/lightdm.conf ];then 
-	CustomFile=/root/etc/lightdm/lightdm.conf
-	sed -i 's/#autologin-user=/autologin-user='"$USERNAME"'/g' $CustomFile
-	sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/g' $CustomFile
+config='/root/etc/lightdm/lightdm.conf'
+if [ -f $config ];then 
+	sed -i 's/#autologin-user=/autologin-user='"$USERNAME"'/g' $config
+	sed -i 's/#autologin-user-timeout=0/autologin-user-timeout=0/g' $config
 fi
 
 # gdm
-if [ -f /root/etc/gdm/custom.conf ]; then
-    GDMCustomFile=/root/etc/gdm/custom.conf
+config='/root/etc/gdm/custom.conf'
+if [ -f $config ]; then
     for para in AutomaticLoginEnable \
                 AutomaticLogin \
                 TimedLoginEnable \
                 TimedLoginDelay \
                 TimedLogin; do
-        if grep -q ^"$para"= $GDMCustomFile; then
-            sed -i '/^'"$para"'=/d' $GDMCustomFile
+        if grep -q ^"$para"= $config; then
+            sed -i '/^'"$para"'=/d' $config
         fi
     done
     sed -i -r \
@@ -44,24 +44,26 @@ if [ -f /root/etc/gdm/custom.conf ]; then
         -e '/\[daemon\]/a#AutomaticLogin='"$USERNAME"'' \
         -e '/\[daemon\]/a#TimedLoginEnable=true' \
         -e '/\[daemon\]/a#TimedLoginDelay=10' \
-        -e '/\[daemon\]/a#TimedLogin='"$USERNAME"'' $GDMCustomFile	
+        -e '/\[daemon\]/a#TimedLogin='"$USERNAME"'' $config
 fi
 
 # kdm
-if [ -f /root/etc/kde4/kdm/kdmrc ]; then
+config='/root/usr/share/config/kdm/kdmrc'
+if [ -f $config ]; then
     sed -i -r \
-        -e "s/^#?AutoLoginEnable=.*\$/AutoLoginEnable=true/" \
-        -e "s/^#?AutoLoginUser=.*\$/AutoLoginUser=$USERNAME/" \
-        -e "s/^#?AutoReLogin=.*\$/AutoReLogin=true/" \
-        /root/etc/kde4/kdm/kdmrc
+        -e "s/^#AutoLoginEnable=.*\$/AutoLoginEnable=true/" \
+        -e "s/^#AutoLoginUser=.*\$/AutoLoginUser=$USERNAME/" \
+        -e "s/^#AutoReLogin=.*\$/AutoReLogin=true/" \
+	$config
 fi
 
 # lxdm
-if [ -f /root/etc/lxdm/lxdm.conf ]; then
+config='/root/etc/lxdm/lxdm.conf'
+if [ -f $config ]; then
    sed -i -r \
         -e "s/^# autologin=dgod/autologin=$USERNAME/" \
         -e "s/^# session/session/" \
-        /root/etc/lxdm/lxdm.conf
+	$config
 fi
 
 log_end_msg
