@@ -17,6 +17,11 @@ def main():
             os.system('/usr/bin/gsettings set org.gnome.desktop.session idle-delay 0')
             # Dim the screen after a period of inactivity
             os.system('/usr/bin/gsettings set org.gnome.settings-daemon.plugins.power idle-dim false')
+            # Control the visibility of the Hibernate menu item
+            os.system('/usr/bin/gsettings set org.gnome.shell.extensions.alternative-status-menu allow-hibernate false')
+            # Control the visibility of the Suspend menu item
+            os.system('/usr/bin/gsettings set org.gnome.shell.extensions.alternative-status-menu allow-suspend false')
+
 
 if __name__ == '__main__':
     main()
