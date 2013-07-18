@@ -40,11 +40,9 @@ if [ -f $config ]; then
         fi
     done
     sed -i -r \
-        -e '/\[daemon\]/a#AutomaticLoginEnable=true' \
-        -e '/\[daemon\]/a#AutomaticLogin='"$USERNAME"'' \
-        -e '/\[daemon\]/a#TimedLoginEnable=true' \
-        -e '/\[daemon\]/a#TimedLoginDelay=10' \
-        -e '/\[daemon\]/a#TimedLogin='"$USERNAME"'' $config
+        -e '/\[daemon\]/aAutomaticLoginEnable=true' \
+        -e '/\[daemon\]/aAutomaticLogin='"$USERNAME"'' \
+    $config
 fi
 
 # kdm
